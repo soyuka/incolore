@@ -225,7 +225,7 @@ func Index(env *Env, w http.ResponseWriter, r *http.Request) error {
 	a:hover {border-bottom: 0;}
   </style>
 </head>
-<body>
+<body onload="openFiles()">
   <h1>Incolore</h1>
   <h2>Upload an image</h2>
   <form enctype="multipart/form-data" method="POST" action="/">
@@ -234,10 +234,36 @@ func Index(env *Env, w http.ResponseWriter, r *http.Request) error {
 	<p><small>Data has no warranty and can be removed at any time.</small></p>
   </form>
   <h2>API</h2>
-  <p>Open <code>`+env.Config.ShortenerHostname+`?URL</code> in your browser. Copy the redirected URL from the address bar (CTRL+L, CTRL+C).</p>
+  <p>POST <code>`+env.Config.ShortenerHostname+`</code> with multipart/form-data with f.</p>
   <p><a href="https://github.com/soyuka/incolore">Code on github</a></p>
   <h2>Statistics</h2>
   <p>`+strconv.FormatInt(count, 10)+` images online</p>
+  <script type="text/javascript">
+	var fileUpload = document.querySelector('input[type="file"]')
+	var submit = document.querySelector('input[type="submit"]')
+	fileUpload.addEventListener('change', function(event) {
+		submit.click()
+	})
+
+	function openFiles() {
+		fileUpload.click()
+	}
+
+	document.onpaste = function(event){
+		var items = (event.clipboardData || event.originalEvent.clipboardData).items;
+		for (index in items) {
+			var item = items[index];
+			if (item.kind === 'file') {
+				var file = item.getAsFile();
+				var container = new DataTransfer();
+				container.items.add(file);
+				fileUpload.files = container.files;
+				submit.click()
+				return;
+			}
+		}
+	}
+  </script>
 </body>
 </html>`
 	w.Write([]byte(index))
