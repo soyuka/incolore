@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"bytes"
+	"crypto/sha256"
 
 	"github.com/matoous/go-nanoid"
 	"github.com/h2non/filetype"
@@ -96,6 +97,10 @@ func GetIndex(env *Env, w http.ResponseWriter, r *http.Request) error {
 		_, err := r.Cookie(cookieName)
 		source, err := env.Transport.Get(key)
 
+		if source == "" {
+			return makeStatusError(http.StatusNotFound)
+		}
+
 		if err == nil {
 			cookie := &http.Cookie{Name: cookieName, MaxAge: -1, SameSite: http.SameSiteStrictMode, Secure: true, HttpOnly: true}
 			http.SetCookie(w, cookie)
@@ -138,6 +143,14 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return makeStatusError(http.StatusBadRequest)
 	}
 
+	hash := sha256.Sum256(buf.Bytes())
+	hashStr := string(hash[:])
+	existingId, _ := env.Transport.Get(hashStr)
+	if existingId != "" {
+		http.Redirect(w, r, fmt.Sprintf("%s/%s", env.Config.ShortenerHostname, existingId), 302)
+		return nil
+	}
+
 	if !filetype.IsImage(buf.Bytes()) {
 		return makeStatusError(http.StatusUnsupportedMediaType)
 	}
@@ -149,34 +162,33 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 	}
 
 	id, err := gonanoid.Generate(env.Config.IdAlphabet, env.Config.IdLength)
-
 	if err != nil {
 		return StatusError{http.StatusInternalServerError, err}
 	}
 
 	size := int64(buf.Len())
-
 	if size <= 0 || size > env.Config.MaxSize {
 		return makeStatusError(http.StatusRequestEntityTooLarge)
 	}
 	
 	destination := filepath.Join(env.Config.Directory, handler.Filename)
-
 	exists, _ := Exists(destination)
-
 	if exists {
 		destination = filepath.Join(env.Config.Directory, id + "-" + handler.Filename)
 	}
 
     err = ioutil.WriteFile(destination, buf.Bytes(), 0644)
-
 	if err != nil {
 		log.Println(err)
 		return StatusError{http.StatusInternalServerError, err}
 	}
 
-	err = env.Transport.Put(id, destination)
+	err = env.Transport.Put(hashStr, id)
+	if err != nil {
+		return StatusError{http.StatusInternalServerError, err}
+	}
 
+	err = env.Transport.Put(id, destination)
 	if err != nil {
 		return StatusError{http.StatusInternalServerError, err}
 	}
