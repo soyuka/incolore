@@ -122,7 +122,7 @@ func GetIndex(env *Env, w http.ResponseWriter, r *http.Request) error {
 
 // GET ?http://link creates the link and redirect to the link
 func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
-	r.ParseMultipartForm(2e6)
+	r.ParseMultipartForm(32 << 20)
 	file, handler, err := r.FormFile("f")
 
 	if err != nil {
