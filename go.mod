@@ -1,4 +1,4 @@
-module github.com/soyuka/caligo
+module github.com/soyuka/incolore
 
 go 1.14
 
@@ -7,6 +7,7 @@ require (
 	github.com/go-redis/redis/v8 v8.0.0-beta.10
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/uuid v1.1.1 // indirect
+	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/matoous/go-nanoid v1.3.0
 	go.etcd.io/bbolt v1.3.4
 	go.etcd.io/etcd/v3 v3.3.0-rc.0.0.20200429123506-1044a8b07c56

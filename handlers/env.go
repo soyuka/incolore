@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	t "github.com/soyuka/caligo/transports"
-	c "github.com/soyuka/caligo/config"
+	t "github.com/soyuka/incolore/transports"
+	c "github.com/soyuka/incolore/config"
 )
 
 

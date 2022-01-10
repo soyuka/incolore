@@ -13,7 +13,7 @@ type BoltTransport struct {
 	bucketName string
 }
 
-const defaultBoltBucketName = "caligo"
+const defaultBoltBucketName = "incolore"
 
 // NewBoltTransport create a new BoltTransport.
 func NewBoltTransport(u *url.URL) (*BoltTransport, error) {

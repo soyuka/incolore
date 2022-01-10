@@ -4,9 +4,9 @@ import (
 	"log"
 	"net/http"
 
-	c "github.com/soyuka/caligo/config"
-	"github.com/soyuka/caligo/handlers"
-	t "github.com/soyuka/caligo/transports"
+	c "github.com/soyuka/incolore/config"
+	"github.com/soyuka/incolore/handlers"
+	t "github.com/soyuka/incolore/transports"
 )
 
 func main() {

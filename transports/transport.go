@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
-	c "github.com/soyuka/caligo/config"
+	c "github.com/soyuka/incolore/config"
 )
 
 var (
