@@ -126,6 +126,7 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 	file, handler, err := r.FormFile("f")
 
 	if err != nil {
+		log.Println(err)
 		return makeStatusError(http.StatusBadRequest)
 	}
 
@@ -133,6 +134,7 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 
 	buf := bytes.NewBuffer(nil)
 	if _, err := io.Copy(buf, file); err != nil {
+		log.Println(err)
 		return makeStatusError(http.StatusBadRequest)
 	}
 
@@ -142,6 +144,7 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 
 	kind, _ := filetype.Match(buf.Bytes())
 	if kind == filetype.Unknown {
+		log.Println("File type is unknown")
 		return makeStatusError(http.StatusBadRequest)
 	}
 
@@ -168,6 +171,7 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
     err = ioutil.WriteFile(destination, buf.Bytes(), 0644)
 
 	if err != nil {
+		log.Println(err)
 		return StatusError{http.StatusInternalServerError, err}
 	}
 
@@ -180,22 +184,6 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", env.Config.ShortenerHostname, id), 302)
 	return nil
 }
-
-/// Redirects short link to url
-// func Redirect(env *Env, w http.ResponseWriter, r *http.Request, key string) error {
-// 	url, err := env.Transport.Get(key)
-//
-// 	if err != nil {
-// 		return StatusError{http.StatusInternalServerError, err}
-// 	}
-//
-// 	if url == "" {
-// 		return makeStatusError(http.StatusNotFound)
-// 	}
-//
-// 	http.Redirect(w, r, string(url), 301)
-// 	return nil
-// }
 
 /// Favicon just for fun
 func Favicon(env *Env, w http.ResponseWriter, r *http.Request) error {
