@@ -214,7 +214,7 @@ func Index(env *Env, w http.ResponseWriter, r *http.Request) error {
 	index := `<!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Incolore</title>
+  <title>Incolore 🎨</title>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="description" content="Image and picture host" />
@@ -225,11 +225,11 @@ func Index(env *Env, w http.ResponseWriter, r *http.Request) error {
 	a:hover {border-bottom: 0;}
   </style>
 </head>
-<body onload="openFiles()">
-  <h1>Incolore</h1>
+<body>
+  <h1>Incolore 🎨</h1>
   <h2>Upload an image</h2>
   <form enctype="multipart/form-data" method="POST" action="/">
-	<input type="file" name="f" />
+	<input type="file" name="f" autofocus />
 	<input type="submit" value="Upload"/>
 	<p><small>Data has no warranty and can be removed at any time.</small></p>
   </form>
@@ -244,10 +244,6 @@ func Index(env *Env, w http.ResponseWriter, r *http.Request) error {
 	fileUpload.addEventListener('change', function(event) {
 		submit.click()
 	})
-
-	function openFiles() {
-		fileUpload.click()
-	}
 
 	document.onpaste = function(event){
 		var items = (event.clipboardData || event.originalEvent.clipboardData).items;
