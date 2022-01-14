@@ -14,9 +14,13 @@ import (
 	"os"
 	"bytes"
 	"crypto/sha256"
+	"image"
+	"image/png"
+	"image/jpeg"
 
 	"github.com/matoous/go-nanoid"
 	"github.com/h2non/filetype"
+	"github.com/oliamb/cutter"
 )
 
 func Exists(name string) (bool, error) {
@@ -110,15 +114,60 @@ func GetIndex(env *Env, w http.ResponseWriter, r *http.Request) error {
 		}
 
 		buf, err := ioutil.ReadFile(source)
-
 		if err != nil {
 			return makeStatusError(http.StatusNotFound)
 		}
 
 		kind, _ := filetype.Match(buf)
-
 		w.Header().Add("Content-Type", kind.MIME.Value) 
-		w.Write(buf)
+
+		query := r.URL.Query()
+		crop, present := query["c"]
+		if !present || len(crop) == 0 {
+			w.Write(buf)
+			return nil
+		}
+
+		crop = strings.Split(crop[0], "x")
+
+		if len(crop) < 2 {
+			w.Write(buf)
+			return nil
+		}
+
+		img, _, err := image.Decode(bytes.NewReader(buf))
+		if err != nil {
+			w.Write(buf)
+			return nil
+		}
+
+		width, err := strconv.ParseInt(crop[0], 10, 32)
+		if err != nil {
+			w.Write(buf)
+			return nil
+		}
+
+		height, err := strconv.ParseInt(crop[1], 10, 32)
+		if err != nil {
+			w.Write(buf)
+			return nil
+		}
+
+		croppedImg, err := cutter.Crop(img, cutter.Config{
+			Width:  int(width),
+			Height: int(height),
+		})
+
+		newBuff := bytes.NewBuffer([]byte{})
+
+		switch kind.Extension {
+		case "jpeg":
+			jpeg.Encode(newBuff, croppedImg, &jpeg.Options{95})
+		default:
+			png.Encode(newBuff, croppedImg)
+		}
+
+		w.Write(newBuff.Bytes())
 		return nil
 	}
 
@@ -183,6 +232,7 @@ func CreateLink(env *Env, w http.ResponseWriter, r *http.Request) error {
 		return StatusError{http.StatusInternalServerError, err}
 	}
 
+	id = id + "." + kind.Extension
 	err = env.Transport.Put(hashStr, id)
 	if err != nil {
 		return StatusError{http.StatusInternalServerError, err}

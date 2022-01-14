@@ -9,6 +9,7 @@ require (
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/matoous/go-nanoid v1.3.0
+	github.com/oliamb/cutter v0.2.2 // indirect
 	go.etcd.io/bbolt v1.3.4
 	go.etcd.io/etcd/v3 v3.3.0-rc.0.0.20200429123506-1044a8b07c56
 	go.uber.org/zap v1.15.0 // indirect
