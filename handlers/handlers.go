@@ -21,7 +21,36 @@ import (
 	"github.com/matoous/go-nanoid"
 	"github.com/h2non/filetype"
 	"github.com/oliamb/cutter"
+	"github.com/nfnt/resize"
 )
+
+func ParseQueryParameter(param string) (int, int) {
+	sp := strings.Split(param, "x")
+
+	if len(sp) < 2 {
+		width, err := strconv.ParseInt(param, 10, 32)
+
+		if err != nil {
+			return 0, 0
+		}
+
+		return int(width), 0
+	}
+
+	width, err := strconv.ParseInt(sp[0], 10, 32)
+
+	if err != nil {
+		width = 0
+	}
+
+	height, err := strconv.ParseInt(sp[1], 10, 32)
+
+	if err != nil {
+		height = 0
+	}
+
+	return int(width), int(height)
+}
 
 func Exists(name string) (bool, error) {
     _, err := os.Stat(name)
@@ -122,49 +151,43 @@ func GetIndex(env *Env, w http.ResponseWriter, r *http.Request) error {
 		w.Header().Add("Content-Type", kind.MIME.Value) 
 
 		query := r.URL.Query()
-		crop, present := query["c"]
-		if !present || len(crop) == 0 {
-			w.Write(buf)
-			return nil
-		}
+		crop, hasCrop := query["c"]
+		res, hasResize := query["r"]
 
-		crop = strings.Split(crop[0], "x")
-
-		if len(crop) < 2 {
-			w.Write(buf)
+		if !hasCrop && !hasResize {
+		 	w.Write(buf)
 			return nil
 		}
 
 		img, _, err := image.Decode(bytes.NewReader(buf))
-		if err != nil {
-			w.Write(buf)
-			return nil
+
+		if hasCrop {
+			cropWidth, cropHeight := ParseQueryParameter(crop[0])
+
+			if cropWidth > 0 && cropHeight > 0 {
+				croppedImg, err := cutter.Crop(img, cutter.Config{
+					Width:  cropWidth,
+					Height: cropHeight,
+				})
+
+				if err == nil {
+					img = croppedImg
+				}
+			}
 		}
 
-		width, err := strconv.ParseInt(crop[0], 10, 32)
-		if err != nil {
-			w.Write(buf)
-			return nil
+		if hasResize {
+			width, height := ParseQueryParameter(res[0])
+			img = resize.Resize(uint(width), uint(height), img, resize.NearestNeighbor)
 		}
-
-		height, err := strconv.ParseInt(crop[1], 10, 32)
-		if err != nil {
-			w.Write(buf)
-			return nil
-		}
-
-		croppedImg, err := cutter.Crop(img, cutter.Config{
-			Width:  int(width),
-			Height: int(height),
-		})
 
 		newBuff := bytes.NewBuffer([]byte{})
 
 		switch kind.Extension {
-		case "jpeg":
-			jpeg.Encode(newBuff, croppedImg, &jpeg.Options{95})
-		default:
-			png.Encode(newBuff, croppedImg)
+			case "jpeg":
+				jpeg.Encode(newBuff, img, &jpeg.Options{95})
+			default:
+				png.Encode(newBuff, img)
 		}
 
 		w.Write(newBuff.Bytes())
